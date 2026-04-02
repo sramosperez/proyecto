@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Services\Auth\SsoAuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
     public function __construct(
-        private SsoAuthService $ssoAuth
+        protected SsoAuthService $ssoAuth
     ) {}
 
     public function showLogin()
@@ -21,7 +20,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'employee_id' => 'required|integer',
-            'password'    => 'required|string',
+            'password' => 'required|string',
         ]);
 
         $user = $this->ssoAuth->login(
@@ -29,10 +28,10 @@ class AuthController extends Controller
             $request->input('password')
         );
 
-        if (!$user) {
+        if (! $user) {
             return back()
                 ->withErrors(['login' => 'Credenciales incorrectas.'])
-                ->onlyInput('employee_id');
+                ->withInput();
         }
 
         return redirect()->intended(route('issues.index'));
