@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Auth\SsoAuthService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -23,18 +24,22 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = $this->ssoAuth->login(
-            (int) $request->input('employee_id'),
-            $request->input('password')
-        );
+        try {
+            $user = $this->ssoAuth->login(
+                (int) $request->input('employee_id'),
+                $request->input('password')
+            );
+            if (! $user) {
+                return back()->withErrors(['login' => 'Usuario o contraseña no válidos.'])->withInput();
+            }
 
-        if (! $user) {
-            return back()
-                ->withErrors(['login' => 'Credenciales incorrectas.'])
-                ->withInput();
+            return redirect()->intended(route('issues.index'));
+
+        } catch (AuthorizationException $e) {
+            return back()->withErrors(['login' => $e->getMessage()])->withInput();
+        } catch (\Exception $e) {
+            return back()->withErrors(['login' => 'Error del sistema.'])->withInput();
         }
-
-        return redirect()->intended(route('issues.index'));
     }
 
     public function logout(Request $request)
