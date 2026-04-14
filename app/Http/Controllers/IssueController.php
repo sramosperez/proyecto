@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Interfaces\IssueApiInterface;
+use App\Contracts\IssueApiInterface;
 use Illuminate\Http\Request;
 
 class IssueController extends Controller
@@ -17,7 +17,7 @@ class IssueController extends Controller
         $searchId = $request->query('search_id');
 
         if ($searchId) {
-            $issue = $this->issueService->findIssue((int) $searchId);
+            $issue = $this->issueService->find((int) $searchId);
 
             if (! $issue) {
                 return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
@@ -33,20 +33,18 @@ class IssueController extends Controller
             'comment' => 'nullable|string|max:500',
         ]);
 
-        // TODO: sustituir por Auth::user() cuando esté implementada la autenticación (Fase 3)
-        $storeCode = 'Tienda-001';
-        $employeeId = 123;
+        $employeeId = (int) $request->user()->employee_id;
 
         $newStatus = $request->input('action') === 'close' ? 'Closed' : 'Open';
 
         $this->issueService->updateIssue(
             $id,
             [
-                'storeCode' => $storeCode,
                 'status' => $newStatus,
                 'comment' => $request->input('comment'),
-                'updatedBy' => $employeeId,
             ]
+            ,
+            $employeeId
         );
 
         $message = $newStatus === 'Closed'

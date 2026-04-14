@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\IssueApiInterface;
 use App\Contracts\SsoServiceInterface;
-use App\Interfaces\IssueApiInterface;
 use App\Services\Auth\LocalSsoService;
-use App\Services\IssueApiProxy;
+use App\Services\Issues\IssueApiProxy;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

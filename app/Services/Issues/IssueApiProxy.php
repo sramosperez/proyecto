@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Issues;
 
+use App\Contracts\IssueApiInterface;
 use App\DTOs\IssueDTO;
-use App\Interfaces\IssueApiInterface;
 
 class IssueApiProxy implements IssueApiInterface
 {
@@ -20,7 +20,7 @@ class IssueApiProxy implements IssueApiInterface
         return json_decode($content, true) ?? [];
     }
 
-    public function findIssue(int $id): ?IssueDTO
+    public function find(int $id): ?IssueDTO
     {
         $issues = $this->getRawData();
 
@@ -40,11 +40,10 @@ class IssueApiProxy implements IssueApiInterface
 
         foreach ($allIssues as $key => $item) {
             if ($item['id'] == $id) {
-
                 $allIssues[$key]['status'] = $data['status'] ?? $item['status'];
-                $allIssues[$key]['store_code'] = $data['storeCode'] ?? $item['store_code'];
+                $allIssues[$key]['storeCode'] = $data['storeCode'] ?? $item['storeCode'] ?? null;
                 $allIssues[$key]['comment'] = $data['comment'] ?? null;
-                $allIssues[$key]['updated_by'] = $userId;
+                $allIssues[$key]['updatedBy'] = $userId;
 
                 $updated = true;
                 break;
@@ -52,7 +51,7 @@ class IssueApiProxy implements IssueApiInterface
         }
 
         if ($updated) {
-            file_put_contents(storage_path('app/issues.json'), json_encode($allIssues));
+            file_put_contents(storage_path('app/issues.json'), json_encode($allIssues, JSON_PRETTY_PRINT));
         }
 
         return $updated;

@@ -12,7 +12,7 @@ class EnsureRole
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role->name, $roles)) {
+        if (! $user || ! in_array($user->role->name, $roles)) {
             abort(403, 'No tienes permisos para realizar esta acción.');
         }
 
