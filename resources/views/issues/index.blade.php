@@ -10,13 +10,23 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
 
+    <
+    <div class="bg-slate-900 text-white px-4 py-3 sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <span class="text-sm font-medium">{{ auth()->user()->name ?? 'Usuario' }}</span>
+            <form action="{{ route('logout') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="text-sm font-semibold hover:text-indigo-400 transition-colors">Cerrar sesión</button>
+            </form>
+        </div>
+    </div>
+
     <div class="max-w-3xl mx-auto py-12 px-4">
         <header class="text-center mb-10">
-            <h1 class="text-3xl font-bold tracking-tight text-slate-900 uppercase">Retail <span class="text-indigo-600">Support</span></h1>
+    
             <p class="text-slate-500 mt-2 font-medium">Buscador y Validación de Incidencias en Tienda</p>
         </header>
 
-        <!-- Buscador -->
         <section class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 mb-8">
             <form action="{{ route('issues.index') }}" method="GET" class="flex items-center gap-2">
                 <input type="number" name="search_id" required placeholder="ID de incidencia (101 o 102)" 
@@ -58,7 +68,7 @@
                         @csrf
                         @method('PATCH')
                         
-                        <!-- HEMOS QUITADO EL ATRIBUTO 'required' AQUÍ -->
+                    
                         <textarea name="comment" rows="3" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white text-slate-700" placeholder="Observaciones (opcional)..."></textarea>
 
                         <div class="grid grid-cols-2 gap-4">

@@ -11,12 +11,7 @@
 <body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center px-4">
 
     <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold tracking-tight uppercase">
-                Retail <span class="text-indigo-600">Support</span>
-            </h1>
-            <p class="text-slate-500 mt-1 text-sm">Acceso para empleados</p>
-        </div>
+       
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             @if ($errors->has('login'))
@@ -40,7 +35,7 @@
                         required
                         autofocus
                         class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg"
-                        placeholder="149841"
+                        placeholder="ID empleado"
                     >
                 </div>
 
