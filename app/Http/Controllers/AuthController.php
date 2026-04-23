@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Auth\SsoAuthService;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function __construct(
-        protected SsoAuthService $ssoAuth
-    ) {}
-
     public function showLogin()
     {
         return view('auth.login');
@@ -24,27 +19,34 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        try {
-            $user = $this->ssoAuth->login(
-                (int) $request->input('employee_id'),
-                $request->input('password')
-            );
-            if (! $user) {
-                return back()->withErrors(['login' => 'Usuario o contraseña no válidos.'])->withInput();
+        $credentials = [
+            'employee_id' => (int) $request->input('employee_id'),
+            'password' => $request->input('password'),
+        ];
+
+        if (Auth::attempt($credentials)) {
+
+            $user = Auth::user();
+            if ($user->role->name !== 'User Authorized') {
+                Auth::logout();
+
+                return back()->withErrors(['login' => 'No tienes acceso autorizado.'])->withInput();
             }
 
-            return redirect()->intended(route('issues.index'));
+            $request->session()->regenerate();
 
-        } catch (AuthorizationException $e) {
-            return back()->withErrors(['login' => $e->getMessage()])->withInput();
-        } catch (\Exception $e) {
-            return back()->withErrors(['login' => 'Error del sistema.'])->withInput();
+            return redirect()->intended(route('issues.index'));
         }
+
+        return back()->withErrors(['login' => 'Usuario o contraseña no válidos.'])->withInput();
     }
 
     public function logout(Request $request)
     {
-        $this->ssoAuth->logout($request);
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }

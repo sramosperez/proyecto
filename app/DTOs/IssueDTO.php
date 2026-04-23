@@ -9,9 +9,10 @@ class IssueDTO
         public string $reference,
         public string $description,
         public string $resolution,
+        public ?string $comment,
         public string $status,
         public ?string $storeCode = null,
-        public ?string $updatedBy = null,
+        public ?int $updatedBy = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -21,9 +22,10 @@ class IssueDTO
             reference: $data['reference'] ?? 'N/A',
             description: $data['description'],
             resolution: $data['resolution'],
+            comment: $data['comment'] ?? null,
             status: $data['status'],
             storeCode: $data['storeCode'] ?? null,
-            updatedBy: $data['updatedBy'] ?? null,
+            updatedBy: isset($data['updatedBy']) ? (int) $data['updatedBy'] : null,
         );
     }
 
