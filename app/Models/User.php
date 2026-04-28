@@ -10,26 +10,26 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['employee_id', 'name', 'email', 'password', 'role_id'];
-
-    protected $table = 'users';
-
     protected $primaryKey = 'employee_id';
 
     public $incrementing = false;
 
-    protected $hidden = [
+    protected $fillable = [
+        'employee_id',
+        'name',
         'password',
-        'remember_token',
+        'role_id',
+        'store_code',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
+
+    protected $casts = [
+        'password' => 'hashed',
     ];
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(Role::class);
     }
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
 }

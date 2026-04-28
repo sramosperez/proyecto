@@ -14,7 +14,21 @@ class IssueController extends Controller
     public function index(Request $request)
     {
         $issue = null;
+        $issues = [];
+        $showAll = $request->boolean('show_all');
         $searchId = $request->query('search_id');
+        $userRole = $request->user()?->role?->name;
+        $userStoreCode = $request->user()?->store_code;
+
+        if ($showAll) {
+            if ($userRole !== 'Dirección') {
+                return redirect()->route('issues.index')->with('error', 'Solo Direccion puede ver el listado completo.');
+            }
+
+            $issues = $this->issueService->listByStore($userStoreCode);
+
+            return view('issues.index', compact('issue', 'issues', 'showAll'));
+        }
 
         if ($searchId) {
             $issue = $this->issueService->find((int) $searchId);
@@ -22,9 +36,14 @@ class IssueController extends Controller
             if (! $issue) {
                 return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
             }
+
+            // Validar que la incidencia pertenece a la tienda del usuario
+            if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
+                return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
+            }
         }
 
-        return view('issues.index', compact('issue'));
+        return view('issues.index', compact('issue', 'issues', 'showAll'));
     }
 
     public function update(Request $request, $id)
@@ -40,6 +59,12 @@ class IssueController extends Controller
             return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
         }
 
+        // Validar que la incidencia pertenece a la tienda del usuario
+        $userStoreCode = $request->user()?->store_code;
+        if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
+            return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
+        }
+
         if ($issue->status === 'Closed') {
             return redirect()
                 ->route('issues.index', ['search_id' => $id])
@@ -51,6 +76,7 @@ class IssueController extends Controller
         $newStatus = $request->input('action') === 'close' ? 'Closed' : $issue->status;
         $payload = [
             'status' => $newStatus,
+            'storeCode' => $userStoreCode,
         ];
 
         $comment = $request->input('comment');

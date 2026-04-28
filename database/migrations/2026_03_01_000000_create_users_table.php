@@ -15,7 +15,8 @@ return new class extends Migration
             $table->BigInteger('employee_id')->unsigned()->primary();
             $table->string('name');
             $table->foreignId('role_id')->constrained('roles');
-            $table->string('email')->unique();
+            $table->string('store_code', 20)->nullable();
+            $table->string('email')->nullable()->unique();
             $table->string('password');
             $table->timestamps();
         });

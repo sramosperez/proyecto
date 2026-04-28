@@ -12,7 +12,7 @@ class IssueApiProxy implements IssueApiInterface
 {
     private Database $database;
 
-    private array $basePaths = ['issues', 'Issue', '/'];
+    private array $basePaths = ['issues'];
 
     public function __construct(Database $database)
     {
@@ -81,6 +81,51 @@ class IssueApiProxy implements IssueApiInterface
         }
     }
 
+    public function listByStore(?string $storeCode = null): array
+    {
+        try {
+            $issues = $this->database
+                ->getReference('issues')
+                ->getValue();
+
+            if (! is_array($issues) || empty($issues)) {
+                return [];
+            }
+
+            $items = [];
+
+            foreach ($issues as $firebaseKey => $issueData) {
+                if (! is_array($issueData)) {
+                    continue;
+                }
+
+                if (! isset($issueData['id'])) {
+                    $issueData['id'] = (int) $firebaseKey;
+                }
+
+                $dto = IssueDTO::fromArray($issueData);
+
+                // En modo listado por tienda, solo incluir incidencias asignadas a esa tienda.
+                if ($storeCode && $dto->storeCode !== $storeCode) {
+                    continue;
+                }
+
+                $items[] = $dto;
+            }
+
+            usort($items, fn (IssueDTO $a, IssueDTO $b) => $a->id <=> $b->id);
+
+            return $items;
+        } catch (Throwable $e) {
+            Log::error('Error listando incidencias.', [
+                'store_code' => $storeCode,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
     public function updateIssue(int $id, array $data, int $userId): bool
     {
         try {
@@ -91,9 +136,19 @@ class IssueApiProxy implements IssueApiInterface
             }
 
             $current = $result['data'];
+            $currentStoreCode = $current['storeCode'] ?? null;
+            $requestedStatus = $data['status'] ?? ($current['status'] ?? 'Open');
+            $isCurrentStatusBoolean = is_bool($current['status'] ?? null);
+
+            $statusToPersist = $requestedStatus;
+            if ($isCurrentStatusBoolean) {
+                // En modo booleano legacy: true = Open, false = Closed.
+                $statusToPersist = $requestedStatus === 'Closed' ? false : true;
+            }
+
             $payload = [
-                'status' => $data['status'] ?? ($current['status'] ?? 'Open'),
-                'storeCode' => $data['storeCode'] ?? ($current['storeCode'] ?? null),
+                'status' => $statusToPersist,
+                'storeCode' => $data['storeCode'] ?? $currentStoreCode,
                 'updatedBy' => $userId,
             ];
 

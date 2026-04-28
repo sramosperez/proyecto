@@ -1,10 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IssueController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn() => redirect()->route('issues.index'));
+Route::get('/', function () {
+    return redirect()->route('issues.index');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -17,7 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('issues')->group(function () {
         Route::get('/', [IssueController::class, 'index'])->name('issues.index');
         Route::patch('/{id}', [IssueController::class, 'update'])
-            ->middleware('role:User Authorized')
+            ->middleware('role:Responsable,Dirección')
             ->name('issues.update');
     });
 });

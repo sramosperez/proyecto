@@ -10,23 +10,30 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $roleAuth = Role::where('name', 'User Authorized')->first();
-        $roleNoAuth = Role::where('name', 'User Unauthorized')->first();
+        $roles = Role::pluck('id', 'name');
 
         User::create([
-            'employee_id' => 149841,
-            'name' => 'Sara Ramos Pérez',
-            'email' => 'sara@retail.com',
-            'password' => bcrypt('admin123'),
-            'role_id' => $roleAuth->id,
+            'employee_id' => 101,
+            'name' => 'Test Director',
+            'password' => 'pass101',
+            'role_id' => $roles['Dirección'],
+            'store_code' => 'LOG-001',
         ]);
 
         User::create([
-            'employee_id' => 100000,
-            'name' => 'Juan Empleado',
-            'email' => 'juan@retail.com',
-            'password' => bcrypt('user123'),
-            'role_id' => $roleNoAuth->id,
+            'employee_id' => 201,
+            'name' => 'Test Responsable',
+            'password' => 'pass201',
+            'role_id' => $roles['Responsable'],
+            'store_code' => 'LOG-001',
+        ]);
+
+        User::create([
+            'employee_id' => 301,
+            'name' => 'Test Empleado',
+            'password' => 'pass301',
+            'role_id' => $roles['Empleado'],
+            'store_code' => 'LOG-001',
         ]);
     }
 }

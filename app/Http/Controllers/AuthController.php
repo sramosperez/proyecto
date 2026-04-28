@@ -25,14 +25,6 @@ class AuthController extends Controller
         ];
 
         if (Auth::attempt($credentials)) {
-
-            $user = Auth::user();
-            if ($user->role->name !== 'User Authorized') {
-                Auth::logout();
-
-                return back()->withErrors(['login' => 'No tienes acceso autorizado.'])->withInput();
-            }
-
             $request->session()->regenerate();
 
             return redirect()->intended(route('issues.index'));
