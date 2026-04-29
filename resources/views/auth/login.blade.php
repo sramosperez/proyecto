@@ -3,61 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retail Support - Acceso</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <title>Incidents - Login</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center px-4">
-
-    <div class="w-full max-w-sm">
-       
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            @if ($errors->has('login'))
-                <div class="bg-red-50 border-l-4 border-red-400 p-3 mb-6 rounded-r-xl text-red-800 text-sm font-medium">
-                    {{ $errors->first('login') }}
-                </div>
-            @endif
-
-            <form action="{{ route('login') }}" method="POST" class="space-y-5">
-                @csrf
-
-                <div>
-                    <label for="employee_id" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                        ID de empleado
-                    </label>
-                    <input
-                        type="number"
-                        id="employee_id"
-                        name="employee_id"
-                        value="{{ old('employee_id') }}"
-                        required
-                        autofocus
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg"
-                        placeholder="ID empleado"
-                    >
-                </div>
-
-                <div>
-                    <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                        Contraseña
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg"
-                    >
-                </div>
-
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 mt-2">
-                    ENTRAR
-                </button>
-            </form>
+<body>
+    <main>
+        <div class="ui-brand">
+            <span class="ui-brand-square" aria-hidden="true"></span>
+            <span>Incidents</span>
         </div>
-    </div>
 
+        <hr class="ui-divider">
+
+        <h1 class="ui-title">Login</h1>
+
+        @if ($errors->has('login'))
+            <div class="ui-alert-error" role="alert">
+                {{ $errors->first('login') }}
+            </div>
+        @endif
+
+        <form
+            action="{{ route('login') }}"
+            method="POST"
+            x-data="{ loading: false }"
+            @submit="loading = true"
+        >
+            @csrf
+
+            <label for="employee_id" class="ui-label">User</label>
+            <input
+                type="number"
+                id="employee_id"
+                name="employee_id"
+                value="{{ old('employee_id') }}"
+                placeholder="Employee ID"
+                class="ui-field"
+                required
+                autofocus
+                inputmode="numeric"
+                autocomplete="username"
+            >
+
+            <label for="password" class="ui-label">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="******"
+                class="ui-field"
+                required
+                autocomplete="current-password"
+            >
+
+            <button type="submit" class="ui-btn-primary" :disabled="loading">
+                <span x-show="!loading">Login</span>
+                <span x-show="loading" x-cloak>Cargando...</span>
+            </button>
+        </form>
+    </main>
 </body>
 </html>

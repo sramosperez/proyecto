@@ -1,11 +1,149 @@
-@import 'tailwindcss';
+@import 'bootstrap/dist/css/bootstrap.min.css';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+:root {
+    --ui-bg: #d9d9d9;
+    --ui-panel: #efefef;
+    --ui-text: #050505;
+    --ui-line: #7f7f7f;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+* {
+    box-sizing: border-box;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #d7d7d7 0%, #cfcfcf 100%);
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--ui-text);
+    display: flex;
+    justify-content: center;
+    padding: 20px 12px;
+}
+
+main {
+    width: 100%;
+    max-width: 430px;
+    background: var(--ui-panel);
+    border: 1px solid #dedede;
+    min-height: calc(100vh - 40px);
+    padding: 28px 24px 32px;
+}
+
+.ui-brand {
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-size: 1.04rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ui-brand-square {
+    width: 11px;
+    height: 11px;
+    background: #000;
+    border-radius: 2px;
+}
+
+.ui-divider {
+    border: 0;
+    border-top: 1px solid #d4d4d4;
+    margin: 24px -24px 60px;
+}
+
+.ui-title {
+    margin: 0 0 34px;
+    font-size: 2.03rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.ui-label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.23em;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    margin-bottom: 14px;
+    font-weight: 600;
+}
+
+.ui-field {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--ui-line);
+    background: transparent;
+    padding: 0 0 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: var(--ui-text);
+    margin-bottom: 28px;
+}
+
+.ui-field:focus {
+    outline: none;
+    border-bottom-color: #151515;
+}
+
+.ui-field::placeholder {
+    color: #8f8f8f;
+    letter-spacing: 0.08em;
+}
+
+.ui-btn-primary {
+    width: 100%;
+    border: 0;
+    background: #000;
+    color: #fff;
+    padding: 14px 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.ui-btn-primary:active {
+    transform: scale(0.99);
+}
+
+.ui-btn-primary:disabled {
+    opacity: 0.75;
+    cursor: default;
+}
+
+.ui-alert-error {
+    margin-bottom: 22px;
+    border-left: 3px solid #000;
+    background: #e4e4e4;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+}
+
+@media (min-width: 768px) {
+    body {
+        padding: 36px 18px;
+    }
+
+    .ui-device {
+        min-height: auto;
+        border-radius: 8px;
+        padding: 34px 34px 36px;
+    }
+
+    .ui-divider {
+        margin: 28px -34px 68px;
+    }
 }
