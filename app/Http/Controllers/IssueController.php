@@ -46,6 +46,24 @@ class IssueController extends Controller
         return view('issues.index', compact('issue', 'issues', 'showAll'));
     }
 
+    public function show(Request $request, $id)
+    {
+        $userRole = $request->user()?->role?->name;
+        $userStoreCode = $request->user()?->store_code;
+
+        $issue = $this->issueService->find((int) $id);
+
+        if (! $issue) {
+            return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
+        }
+
+        if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
+            return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
+        }
+
+        return view('issues.show', compact('issue'));
+    }
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -88,7 +106,7 @@ class IssueController extends Controller
 
         if (! $updated) {
             return redirect()
-                ->route('issues.index', ['search_id' => $id])
+                ->route('issues.show', $id)
                 ->with('error', 'No se pudo actualizar la incidencia #'.$id.'.');
         }
 
@@ -96,6 +114,6 @@ class IssueController extends Controller
             ? 'Incidencia #'.$id.' cerrada correctamente.'
             : 'Comentario añadido a la incidencia #'.$id.'.';
 
-        return redirect()->route('issues.index', ['search_id' => $id])->with('success', $message);
+        return redirect()->route('issues.show', $id)->with('success', $message);
     }
 }
