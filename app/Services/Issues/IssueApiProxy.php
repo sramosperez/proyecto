@@ -19,7 +19,7 @@ class IssueApiProxy implements IssueApiInterface
         $this->database = $database;
     }
 
-    private function findFirebaseIssueById(int $id): ?array
+    private function findFirebaseIssueById(int $id)
     {
         try {
             foreach ($this->basePaths as $basePath) {
@@ -52,10 +52,7 @@ class IssueApiProxy implements IssueApiInterface
 
             return null;
         } catch (Throwable $e) {
-            Log::warning('No se pudo consultar Firebase.', [
-                'issue_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
+            Log::warning("Error en Firebase para issue {$id}: ".$e->getMessage());
 
             return null;
         }
@@ -63,25 +60,16 @@ class IssueApiProxy implements IssueApiInterface
 
     public function find(int $id): ?IssueDTO
     {
-        try {
-            $result = $this->findFirebaseIssueById($id);
+        $result = $this->findFirebaseIssueById($id);
 
-            if (! $result) {
-                return null;
-            }
-
-            return IssueDTO::fromArray($result['data']);
-        } catch (Throwable $e) {
-            Log::error('Error consultando incidencia.', [
-                'issue_id' => $id,
-                'error' => $e->getMessage(),
-            ]);
-
+        if (! $result) {
             return null;
         }
+
+        return IssueDTO::fromArray($result['data']);
     }
 
-    public function listByStore(?string $storeCode = null): array
+    public function getAllIssues($storeCode = null): array
     {
         try {
             $issues = $this->database
@@ -105,7 +93,6 @@ class IssueApiProxy implements IssueApiInterface
 
                 $dto = IssueDTO::fromArray($issueData);
 
-                // En modo listado por tienda, solo incluir incidencias asignadas a esa tienda.
                 if ($storeCode && $dto->storeCode !== $storeCode) {
                     continue;
                 }
@@ -141,9 +128,8 @@ class IssueApiProxy implements IssueApiInterface
             $isCurrentStatusBoolean = is_bool($current['status'] ?? null);
 
             $statusToPersist = $requestedStatus;
-            if ($isCurrentStatusBoolean) {
-                // En modo booleano legacy: true = Open, false = Closed.
-                $statusToPersist = $requestedStatus === 'Closed' ? false : true;
+            if (is_bool($current['status'] ?? null)) {
+                $data['status'] = $data['status'] === 'Closed' ? false : true;
             }
 
             $payload = [
@@ -156,9 +142,8 @@ class IssueApiProxy implements IssueApiInterface
                 $payload['comment'] = $data['comment'];
             }
 
-            $this->database
-                ->getReference($result['path'] === '/' ? '/'.$result['key'] : $result['path'].'/'.$result['key'])
-                ->update($payload);
+            $path = $result['path'] === '/' ? '/'.$result['key'] : $result['path'].'/'.$result['key'];
+            $this->database->getReference($path)->update($payload);
 
             return true;
         } catch (Throwable $e) {

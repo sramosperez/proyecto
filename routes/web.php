@@ -18,7 +18,9 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('issues')->group(function () {
         Route::get('/', [IssueController::class, 'index'])->name('issues.index');
-        Route::get('/{id}', [IssueController::class, 'show'])->name('issues.show');
+        Route::get('/{id}', [IssueController::class, 'show'])
+            ->middleware('role:Responsable,Dirección')
+            ->name('issues.show');
         Route::patch('/{id}', [IssueController::class, 'update'])
             ->middleware('role:Responsable,Dirección')
             ->name('issues.update');

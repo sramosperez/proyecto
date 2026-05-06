@@ -8,11 +8,11 @@
 </head>
 
 <body>
-    <nav class="navbar bg-body-secondary">
-        <div class="container d-flex justify-content-between align-items-center">
+    <nav class="navbar bg-white border-bottom shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center py-2">
             <div class="navbar-brand d-flex align-items-center">
                 <i class="bi bi-map-fill p-2"></i>
-                <span class="fs-5 fw-bold">INCIDENCIAS</span>
+                <a href="{{ url('/') }}" class="fs-5 fw-bold text-decoration-none text-dark">INCIDENCIAS</a>
             </div>
             <div class="d-flex align-items-center gap-3">
                 @auth
@@ -22,8 +22,7 @@
                     </div>
                     <form action="{{ route('logout') }}" method="POST" class="m-0">
                         @csrf
-                        <button type="submit" class="btn btn-sm fw-bold px-3"
-                            style="border-radius: 0; border: 1px solid black; background: transparent;">
+                        <button type="submit" class="btn btn-light fw-bold px-3">
                             SALIR
                         </button>
                     </form>

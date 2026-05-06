@@ -7,6 +7,31 @@
         $userRole = auth()->user()?->role?->name;
         $canUpdateIssue = in_array($userRole, ['Responsable', 'Dirección'], true);
 
+        $maskSurname = function (?string $surname): string {
+            $value = trim((string) $surname);
+            if ($value === '') {
+                return 'No disponible';
+            }
+
+            $parts = preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY);
+            if (!$parts) {
+                return 'No disponible';
+            }
+
+            $maskedParts = array_map(function (string $part): string {
+                $visible = \Illuminate\Support\Str::substr($part, 0, 2);
+                $length = \Illuminate\Support\Str::length($part);
+
+                if ($length <= 2) {
+                    return $part;
+                }
+
+                return $visible . str_repeat('*', max($length - 2, 2));
+            }, $parts);
+
+            return implode(' ', $maskedParts);
+        };
+
         $maskEmail = function (?string $email): string {
             if (!$email || !str_contains($email, '@')) {
                 return 'No disponible';
@@ -54,10 +79,9 @@
                         #{{ $issue->id }}
                     </h2>
                 </div>
-                <span class="fw-black px-3 py-1"
-                    style="border-radius: 0; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
-                           background: {{ $issue->status === 'Open' ? '#fef3c7; color: #92400e' : '#dbeafe; color: #1e40af' }};">
-                    {{ $issue->status === 'Open' ? 'Abierta' : 'Cerrada' }}
+                <span
+                    class="issue-status-badge {{ $issue->status === 'Open' ? 'issue-status-open' : 'issue-status-closed' }}">
+                    {{ $issue->status === 'Open' ? 'PENDIENTE' : 'CERRADA' }}
                 </span>
             </div>
         </div>
@@ -83,8 +107,7 @@
             {{-- Nº pedido + Fecha --}}
             <div class="row g-3 mb-4 p-3" style="background: #f9fafb; border: 1px solid #e5e7eb;">
                 <div class="col-12 col-sm-6">
-                    <p class="mb-1"
-                        style="font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: #6b7280;">
+                    <p class="mb-1">
                         Nº de pedido</p>
                     <p class="fw-semibold mb-0">{{ $issue->orderNumber ?: 'No disponible' }}</p>
                 </div>
@@ -92,7 +115,9 @@
                     <p class="mb-1"
                         style="font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: #6b7280;">
                         Fecha de incidencia</p>
-                    <p class="fw-semibold mb-0">{{ $issue->createdAt ?: 'No disponible' }}</p>
+                    <p class="fw-semibold mb-0">
+                        {{ $issue->createdAt ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::before($issue->createdAt, 'T'), ' ') : 'No disponible' }}
+                    </p>
                 </div>
             </div>
 
@@ -103,14 +128,28 @@
                     Datos de cliente</p>
 
                 @if ($userRole === 'Empleado')
-                    <p class="small text-muted mb-0">No tienes permisos para visualizar datos sensibles del cliente.</p>
-                @else
                     <div class="row g-2">
                         <div class="col-12 col-sm-6">
                             <p class="mb-0"
                                 style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700;">
                                 Nombre</p>
-                            <p class="fw-medium mb-0">{{ $issue->customerName ?: 'No disponible' }}</p>
+                            <p class="fw-medium mb-0">{{ $issue->name ?: 'No disponible' }}</p>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <p class="mb-0"
+                                style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700;">
+                                Apellido</p>
+                            <p class="fw-medium mb-0">{{ $maskSurname($issue->surname) }}</p>
+                        </div>
+                    </div>
+                @else
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <p class="mb-0"
+                                style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700;">
+                                Nombre completo</p>
+                            <p class="fw-medium mb-0">
+                                {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ?? '')) ?: 'No disponible' }}</p>
                         </div>
                         <div class="col-12 col-sm-6">
                             <p class="mb-0"

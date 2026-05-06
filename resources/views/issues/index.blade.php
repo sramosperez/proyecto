@@ -6,6 +6,30 @@
     @php
         $userRole = auth()->user()?->role?->name;
         $isDirector = $userRole === 'Dirección';
+        $maskSurname = function (?string $surname): string {
+            $value = trim((string) $surname);
+            if ($value === '') {
+                return '—';
+            }
+
+            $parts = preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY);
+            if (!$parts) {
+                return '—';
+            }
+
+            $maskedParts = array_map(function (string $part): string {
+                $visible = \Illuminate\Support\Str::substr($part, 0, 2);
+                $length = \Illuminate\Support\Str::length($part);
+
+                if ($length <= 2) {
+                    return $part;
+                }
+
+                return $visible . str_repeat('*', max($length - 2, 2));
+            }, $parts);
+
+            return implode(' ', $maskedParts);
+        };
     @endphp
     <div x-data="{ loading: false }">
 
@@ -16,12 +40,10 @@
                     <p class="mt-3">Introduce el código de la incidencia</p>
                 </div>
 
-                {{-- Formulario de búsqueda --}}
-                <form action="{{ route('issues.index') }}" method="GET" class="mb-4" @submit="loading = true">
+                <form action="{{ route('issues.index') }}" method="GET" class="form-search mb-4" @submit="loading = true">
                     <div class="d-flex gap-2 align-items-stretch">
-                        <input type="number" name="search_id" class="form-control form-control-lg"
-                            style="border: none; border-radius: 0; border-bottom: 2px solid black;" placeholder="000000"
-                            value="{{ request('search_id') }}" inputmode="numeric" required>
+                        <input type="number" name="search_id" class="form-control form-control-lg" placeholder="000000"
+                            value="{{ isset($issue) ? '' : request('search_id') }}" inputmode="numeric" required>
                         <button type="submit" class="btn btn-custom px-4 fw-bold" :disabled="loading">
                             <span x-show="!loading">BUSCAR</span>
                             <span x-show="loading" x-cloak>
@@ -33,63 +55,65 @@
 
                 @if ($isDirector)
                     <div class="mb-4">
-                        <a href="{{ route('issues.index', ['show_all' => 1]) }}" class="btn btn-sm fw-bold"
-                            style="border-radius: 0; border: 1px solid black;">
-                            VER TODAS
+                        <a href="{{ route('issues.index', ['show_all' => 1]) }}" class="btn btn-light fw-bold">
+                            VER INCIDENCIAS DE LA TIENDA {{ auth()->user()?->store_code ?? '—' }}
                         </a>
                     </div>
                 @endif
 
-                {{-- Mensajes de sesión --}}
                 @if (session('error'))
                     <div class="login-error-banner mb-4">{{ session('error') }}</div>
                 @endif
 
                 @if (session('success'))
-                    <div class="alert border-0 fw-bold mb-4 p-3"
-                        style="background: #d1fae5; color: #065f46; border-radius: 0;">
+                    <div class="alert border-0 fw-bold mb-4 p-3 alert-success">
                         {{ session('success') }}
                     </div>
                 @endif
 
                 {{-- Tarjeta de resumen --}}
                 @isset($issue)
-                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 0; max-width: 480px;">
-                        <div class="card-body p-4">
+                    <div class="card my-5 py-5 border-0">
+                        <div class="card-body py-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <p class="text-muted mb-0"
-                                        style="font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;">
-                                        Ref: {{ $issue->reference }}
-                                    </p>
-                                    <h2 class="fw-bold mb-0" style="font-size: 1.8rem; font-family: monospace;">
-                                        #{{ $issue->id }}
+                                    <h2 class="fw-bold mb-0">
+                                        {{ $issue->id }}
                                     </h2>
+
                                 </div>
-                                <span class="fw-bold px-3 py-1"
-                                    style="border-radius: 0; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
-                                   background: {{ $issue->status === 'Open' ? '#fef3c7; color: #92400e' : '#dbeafe; color: #1e40af' }};">
-                                    {{ $issue->status === 'Open' ? 'Abierta' : 'Cerrada' }}
+                                <span
+                                    class="issue-status {{ $issue->status === 'Open' ? 'issue-status-open' : 'issue-status-closed' }}">
+                                    {{ $issue->status === 'Open' ? 'PENDIENTE' : 'CERRADA' }}
                                 </span>
                             </div>
 
                             <hr class="my-3">
 
                             <dl class="row mb-3 small">
-                                @if ($userRole !== 'Empleado')
-                                    <dt class="col-5 text-muted fw-bold"
-                                        style="letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.7rem;">Cliente
-                                    </dt>
-                                    <dd class="col-7 fw-semibold mb-2">{{ $issue->customerName ?: '—' }}</dd>
-                                @endif
-                                <dt class="col-5 text-muted fw-bold"
-                                    style="letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.7rem;">Fecha</dt>
-                                <dd class="col-7 fw-semibold mb-0">{{ $issue->createdAt ?: '—' }}</dd>
+                                <dt class="col-5 issue-label">Nº de Pedido
+                                </dt>
+                                <dd class="col-7 fw-semibold mb-2">{{ $issue->orderNumber ?: '—' }}</dd>
+                                <dt class="col-5  issue-label">Cliente
+                                </dt>
+                                <dd class="col-7 fw-semibold mb-2">
+                                    @if ($userRole === 'Empleado')
+                                        {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ? $maskSurname($issue->surname) : '')) ?: '—' }}
+                                    @else
+                                        {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ?? '')) ?: '—' }}
+                                    @endif
+                                </dd>
+                                <dt class="col-5 issue-label">Fecha</dt>
+                                <dd class="col-7 fw-semibold mb-0">
+                                    {{ $issue->createdAt ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::before($issue->createdAt, 'T'), ' ') : '—' }}
+                                </dd>
                             </dl>
 
-                            <a href="{{ route('issues.show', $issue->id) }}" class="btn btn-custom w-100 fw-bold">
-                                VER INCIDENCIA COMPLETA
-                            </a>
+                            @if ($userRole !== 'Empleado')
+                                <a href="{{ route('issues.show', $issue->id) }}" class="btn btn-custom w-100 fw-bold">
+                                    VER INCIDENCIA COMPLETA
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endisset
@@ -97,51 +121,44 @@
         </div>
         {{-- Listado completo (solo Dirección) --}}
         @if (($showAll ?? false) && $isDirector)
-            <div class="card border-0 shadow-sm" style="border-radius: 0;">
-                <div class="card-header bg-light border-0 py-3">
-                    <h2 class="h6 fw-bold mb-0 text-uppercase" style="letter-spacing: 0.1em;">Listado de incidencias
-                    </h2>
-                </div>
-
-                @if (!empty($issues))
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 small">
-                            <thead class="table-light">
-                                <tr class="text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.08em;">
-                                    <th class="fw-bold px-4 py-3">ID</th>
-                                    <th class="fw-bold px-4 py-3">Referencia</th>
-                                    <th class="fw-bold px-4 py-3">Estado</th>
-                                    <th class="fw-bold px-4 py-3">Tienda</th>
-                                    <th class="fw-bold px-4 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($issues as $item)
-                                    <tr>
-                                        <td class="px-4 py-3 fw-semibold">#{{ $item->id }}</td>
-                                        <td class="px-4 py-3">{{ $item->reference }}</td>
-                                        <td class="px-4 py-3">
-                                            <span class="fw-bold px-2 py-1"
-                                                style="font-size: 0.68rem; border-radius: 0; text-transform: uppercase; letter-spacing: 0.06em;
-                                                background: {{ $item->status === 'Open' ? '#fef3c7; color: #92400e' : '#dbeafe; color: #1e40af' }};">
-                                                {{ $item->status === 'Open' ? 'Abierta' : 'Cerrada' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3">{{ $item->storeCode ?: '—' }}</td>
-                                        <td class="px-4 py-3">
-                                            <a href="{{ route('issues.show', $item->id) }}"
-                                                class="fw-bold text-decoration-none" style="color: black;">
-                                                Ver →
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+            <div class="d-flex justify-content-center py-2">
+                <div class="list-card border-0 shadow-sm">
+                    <div class="bg-light border-0 p-3">
+                        <h2 class="h6 fw-bold mb-0 text-uppercase">Listado de incidencias
+                        </h2>
                     </div>
-                @else
-                    <div class="card-body text-muted">No hay incidencias para mostrar.</div>
-                @endif
+
+                    @if (!empty($issues))
+                        <div class="d-flex flex-column">
+                            @foreach ($issues as $item)
+                                <a href="{{ route('issues.show', $item->id) }}"
+                                    class="list-item issue-label text-decoration-none p-4 text-reset d-flex align-items-center justify-content-between gap-3">
+                                    <div>
+                                        <p class="fw-bold mb-2">Nº {{ $item->id ?: '—' }}</p>
+                                        <p class="mb-2 text-muted">
+                                            {{ $item->createdAt ? \Illuminate\Support\Str::upper(\Carbon\Carbon::parse($item->createdAt)->locale('es')->translatedFormat('F d, Y')) : 'SIN FECHA' }}
+                                        </p>
+                                        <p class="mb-2 text-muted">
+                                            {{ $item->name ? $item->name . ' ' . $item->surname : 'Sin nombre' }}
+                                        </p>
+                                        <p class="issue-list-item__store mb-0">TIENDA {{ $item->storeCode ?: '—' }}</p>
+                                    </div>
+
+                                    <div
+                                        class="issue-list-item__aside d-flex flex-column align-items-end align-self-stretch justify-content-between">
+                                        <span
+                                            class="issue-status {{ $item->status === 'Open' ? 'issue-status-open' : 'issue-status-closed' }}">
+                                            {{ $item->status === 'Open' ? 'PENDIENTE' : 'RESUELTA' }}
+                                        </span>
+                                        <span class="issue-list-item__arrow" aria-hidden="true">›</span>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="card-body text-muted">No hay incidencias para mostrar.</div>
+                    @endif
+                </div>
             </div>
         @endif
 

@@ -4,9 +4,13 @@
  :root {
 
      --color-accent-light: #c9ccce;
+     --color-accent-dark: #4b4949e7;
      --color-text: black;
      --color-text-light: white;
      --color-error: #dc001b;
+
+     --color-pending: #e25f07;
+     --color-closed: #40af1e;
  }
 
  * {
@@ -28,14 +32,16 @@
      width: 100%;
  }
 
- .search-card {
+ .search-card,
+ .list-card {
      max-width: 600px;
      width: 100%;
  }
 
+ /** botones  **/
  .btn-custom {
-     border: none;
-     border-radius: 0;
+     border-radius: 2px;
+     border: 1px solid var(--color-accent-light);
      color: var(--color-text-light);
      background: black;
      transition: transform 120ms ease;
@@ -59,10 +65,137 @@
      color: var(--color-text-light);
  }
 
- .form-login input {
-     border: none;
+
+ .btn-light {
+     border-radius: 2px;
+     border: 1px solid var(--color-accent-dark);
+     border-bottom: 2px solid var(--color-accent-dark);
+     color: var(--color-text);
+     background: white;
+     transition: transform 120ms ease;
+     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02),
+         0 4px 12px rgba(0, 0, 0, 0.08);
+ }
+
+ .btn.btn-light:hover,
+ .btn.btn-light:focus,
+ .btn.btn-light:active {
+     transform: scale(0.98);
+     background-color: var(--color-accent-dark);
+     color: var(--color-text-light);
+ }
+
+ .btn-light:active,
+ .btn-light:disabled {
+     background: var(--color-accent-dark);
+     color: var(--color-text-light);
+ }
+
+
+
+
+ /******INDEX BLADE *******/
+
+ .alert-success {
+     background: #d1fae5;
+     color: #065f46;
      border-radius: 0;
-     border-bottom: 1px solid black;
+ }
+
+ .issue-status {
+     display: inline-block;
+     padding: 0.25rem 0.5rem;
+     border: 1px solid currentColor;
+     font-weight: 600;
+     letter-spacing: 0.04em;
+ }
+
+ .issue-status-open {
+     color: var(--color-pending);
+ }
+
+ .issue-status-closed {
+     color: var(--color-closed);
+ }
+
+ .issue-label {
+     letter-spacing: 0.06em;
+     text-transform: uppercase;
+     color: var(--color-accent-dark);
+ }
+
+ .list-item {
+     /*  width: 100%; */
+     border-top: 1px solid rgba(0, 0, 0, 0.829);
+     background: #fff;
+     /* transition: background-color 120ms ease; */
+ }
+
+ .list-item:hover,
+ .list-item:focus {
+     transform: scale(1.01);
+ }
+
+ /*  .issue-list-item__content {
+     flex: 1 1 auto;
+     min-width: 0;
+ } */
+
+ /* .issue-list-item__reference {
+     font-size: 1rem;
+     font-weight: 700;
+     letter-spacing: 0.12em;
+     text-transform: uppercase;
+     color: #111;
+     word-break: normal;
+     overflow-wrap: break-word;
+ } */
+
+ /*  .issue-list-item__date {
+     font-size: 0.95rem;
+     color: #6b6b6b;
+     text-transform: uppercase;
+     line-height: 1.35;
+     word-break: normal;
+     overflow-wrap: break-word;
+ } */
+
+ .issue-list-item__store {
+     display: inline-block;
+     padding: 0.15rem 0.4rem;
+     background: #e9e9e9;
+     font-size: 0.9rem;
+     font-weight: 700;
+     letter-spacing: 0.08em;
+     text-transform: uppercase;
+     color: #222;
+ }
+
+ .issue-list-item__aside {
+     display: flex;
+     align-items: center;
+     gap: 1.5rem;
+     flex-shrink: 0;
+ }
+
+
+ .issue-list-item__arrow {
+     font-size: 2.2rem;
+     line-height: 1;
+     color: #111;
+ }
+
+
+ /**Vistas de navegador **/
+ .form-search input[type='number']::-webkit-outer-spin-button,
+ .form-search input[type='number']::-webkit-inner-spin-button {
+     -webkit-appearance: none;
+     margin: 0;
+ }
+
+ .form-search input[type='number'] {
+     -moz-appearance: textfield;
+     appearance: textfield;
  }
 
  .form-login input:-webkit-autofill,
@@ -72,6 +205,16 @@
      box-shadow: 0 0 0 1000px white inset;
      -webkit-text-fill-color: black;
      transition: background-color 5000s ease-in-out 0s;
+ }
+
+
+ /**formularios**/
+
+ .form-login input,
+ .form-search input {
+     border: none;
+     border-radius: 0;
+     border-bottom: 1px solid black;
  }
 
  .form-control:focus {
@@ -85,6 +228,8 @@
      background-image: none;
  }
 
+
+ /* errores  */
  .login-error-banner {
      height: 60px;
      background: var(--color-error);
@@ -98,6 +243,8 @@
  }
 
 
+ /*mediaqueries*/
+
  @media (min-width: 768px) {
      body {
          min-height: 100vh;
@@ -109,8 +256,9 @@
      .login-card,
      .search-card {
          background: white;
-         border: 1px solid white;
-         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.05);
+         border: 1px solid rgba(0, 0, 0, 0.08);
+
      }
 
  }

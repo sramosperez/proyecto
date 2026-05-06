@@ -12,33 +12,32 @@ class IssueDTO
         public string $description,
         public string $resolution,
         public ?string $comment,
-        public ?string $customerName,
+        public ?string $name,
+        public ?string $surname,
         public ?string $customerEmail,
         public string $status,
-        public ?string $storeCode = null,
-        public ?int $updatedBy = null,
+        public ?string $storeCode,
+        public ?int $updatedBy,
     ) {}
 
     public static function fromArray(array $data): self
     {
-        $rawStatus = $data['status'] ?? 'Open';
-        $rawStoreCode = $data['storeCode'] ?? null;
-        $rawUpdatedBy = $data['updatedBy'] ?? null;
 
-        // Compatibilidad con datos legacy: status booleano en Firebase.
-        $normalizedStatus = match (true) {
-            is_bool($rawStatus) => $rawStatus ? 'Open' : 'Closed',
-            is_string($rawStatus) && strtolower($rawStatus) === 'closed' => 'Closed',
-            default => 'Open',
-        };
+        $status = 'Open';
 
-        $normalizedStoreCode = is_string($rawStoreCode) && trim($rawStoreCode) === ''
-            ? null
-            : $rawStoreCode;
+        if (isset($data['status'])) {
+            if ($data['status'] === false || strtolower($data['status']) === 'closed') {
+                $status = 'Closed';
+            }
+        }
 
-        $normalizedUpdatedBy = is_numeric($rawUpdatedBy)
-            ? (int) $rawUpdatedBy
-            : null;
+        $storeCode = $data['storeCode'] ?? null;
+
+        if ($storeCode === '') {
+            $storeCode = null;
+        }
+
+        $updatedBy = isset($data['updatedBy']) ? (int) $data['updatedBy'] : null;
 
         return new self(
             id: $data['id'],
@@ -48,11 +47,12 @@ class IssueDTO
             description: $data['description'],
             resolution: $data['resolution'],
             comment: $data['comment'] ?? null,
-            customerName: $data['customerName'] ?? null,
+            name: $data['name'] ?? null,
+            surname: $data['surname'] ?? null,
             customerEmail: $data['customerEmail'] ?? null,
-            status: $normalizedStatus,
-            storeCode: $normalizedStoreCode,
-            updatedBy: $normalizedUpdatedBy,
+            status: $status,
+            storeCode: $storeCode,
+            updatedBy: $updatedBy,
         );
     }
 

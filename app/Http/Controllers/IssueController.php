@@ -22,10 +22,14 @@ class IssueController extends Controller
 
         if ($showAll) {
             if ($userRole !== 'Dirección') {
-                return redirect()->route('issues.index')->with('error', 'Solo Direccion puede ver el listado completo.');
+                return redirect()->route('issues.index')->with('error', 'No tienes permisos para ver el listado completo.');
             }
 
-            $issues = $this->issueService->listByStore($userStoreCode);
+            if (! $userStoreCode) {
+                return redirect()->route('issues.index')->with('error', 'Tu tienda no tiene aún incidencias tramitadas.');
+            }
+
+            $issues = $this->issueService->getAllIssues($userStoreCode);
 
             return view('issues.index', compact('issue', 'issues', 'showAll'));
         }
@@ -34,12 +38,7 @@ class IssueController extends Controller
             $issue = $this->issueService->find((int) $searchId);
 
             if (! $issue) {
-                return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
-            }
-
-            // Validar que la incidencia pertenece a la tienda del usuario
-            if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
-                return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
+                return redirect()->route('issues.index', ['search_id' => $searchId])->with('error', 'Incidencia no encontrada.');
             }
         }
 
@@ -48,17 +47,10 @@ class IssueController extends Controller
 
     public function show(Request $request, $id)
     {
-        $userRole = $request->user()?->role?->name;
-        $userStoreCode = $request->user()?->store_code;
-
         $issue = $this->issueService->find((int) $id);
 
         if (! $issue) {
             return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
-        }
-
-        if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
-            return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
         }
 
         return view('issues.show', compact('issue'));
