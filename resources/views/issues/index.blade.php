@@ -37,7 +37,7 @@
             <div class="search-card p-4">
                 <div class="mb-4">
                     <h1 class="h4 fw-bold mb-0">BUSCADOR</h1>
-                    <p class="mt-3">Introduce el código de la incidencia</p>
+                    <p class="mt-3">INTRODUCE EL CÓDIGO DE LA INCIDENCIA</p>
                 </div>
 
                 <form action="{{ route('issues.index') }}" method="GET" class="form-search mb-4" @submit="loading = true">
@@ -54,8 +54,9 @@
                 </form>
 
                 @if ($isDirector)
-                    <div class="mb-4">
-                        <a href="{{ route('issues.index', ['show_all' => 1]) }}" class="btn btn-light fw-bold">
+                    <div class="my-5">
+                        <a href="{{ route('issues.index', ['show_all' => 1]) }}"
+                            class="btn btn-light fw-bold d-inline-flex align-items-center justify-content-center">
                             VER INCIDENCIAS DE LA TIENDA {{ auth()->user()?->store_code ?? '—' }}
                         </a>
                     </div>
@@ -71,7 +72,6 @@
                     </div>
                 @endif
 
-                {{-- Tarjeta de resumen --}}
                 @isset($issue)
                     <div class="card my-5 py-5 border-0">
                         <div class="card-body py-4">
@@ -82,8 +82,7 @@
                                     </h2>
 
                                 </div>
-                                <span
-                                    class="issue-status {{ $issue->status === 'Open' ? 'issue-status-open' : 'issue-status-closed' }}">
+                                <span class="status {{ $issue->status === 'Open' ? 'status-open' : 'status-closed' }}">
                                     {{ $issue->status === 'Open' ? 'PENDIENTE' : 'CERRADA' }}
                                 </span>
                             </div>
@@ -110,7 +109,8 @@
                             </dl>
 
                             @if ($userRole !== 'Empleado')
-                                <a href="{{ route('issues.show', $issue->id) }}" class="btn btn-custom w-100 fw-bold">
+                                <a href="{{ route('issues.show', $issue->id) }}"
+                                    class="btn btn-custom w-100 fw-bold d-flex align-items-center justify-content-center mt-4">
                                     VER INCIDENCIA COMPLETA
                                 </a>
                             @endif
@@ -119,42 +119,48 @@
                 @endisset
             </div>
         </div>
-        {{-- Listado completo (solo Dirección) --}}
+
         @if (($showAll ?? false) && $isDirector)
             <div class="d-flex justify-content-center py-2">
                 <div class="list-card border-0 shadow-sm">
                     <div class="bg-light border-0 p-3">
-                        <h2 class="h6 fw-bold mb-0 text-uppercase">Listado de incidencias
+                        <h2 class="fw-bold mb-0 fs-5">LISTADO DE INCIDENCIAS
                         </h2>
                     </div>
 
-                    @if (!empty($issues))
+                    @if (count($issues) > 0)
                         <div class="d-flex flex-column">
                             @foreach ($issues as $item)
                                 <a href="{{ route('issues.show', $item->id) }}"
-                                    class="list-item issue-label text-decoration-none p-4 text-reset d-flex align-items-center justify-content-between gap-3">
+                                    class="text-reset list-item text-decoration-none p-4 d-flex align-items-center justify-content-between gap-3">
                                     <div>
                                         <p class="fw-bold mb-2">Nº {{ $item->id ?: '—' }}</p>
                                         <p class="mb-2 text-muted">
                                             {{ $item->createdAt ? \Illuminate\Support\Str::upper(\Carbon\Carbon::parse($item->createdAt)->locale('es')->translatedFormat('F d, Y')) : 'SIN FECHA' }}
                                         </p>
-                                        <p class="mb-2 text-muted">
+                                        <p class="mb-2 issue-label fw-bold">
                                             {{ $item->name ? $item->name . ' ' . $item->surname : 'Sin nombre' }}
                                         </p>
-                                        <p class="issue-list-item__store mb-0">TIENDA {{ $item->storeCode ?: '—' }}</p>
+                                        <p class="badge-light fw-bolder mb-0">EMPLEADO {{ $item->updatedBy ?: '—' }}</p>
                                     </div>
 
                                     <div
-                                        class="issue-list-item__aside d-flex flex-column align-items-end align-self-stretch justify-content-between">
+                                        class="list-status d-flex flex-column align-items-end align-self-stretch justify-content-between">
                                         <span
-                                            class="issue-status {{ $item->status === 'Open' ? 'issue-status-open' : 'issue-status-closed' }}">
+                                            class="status {{ $item->status === 'Open' ? 'status-open' : 'status-closed' }}">
                                             {{ $item->status === 'Open' ? 'PENDIENTE' : 'RESUELTA' }}
                                         </span>
-                                        <span class="issue-list-item__arrow" aria-hidden="true">›</span>
+                                        <span class="display-4 fw-bold" aria-hidden="true">›</span>
                                     </div>
                                 </a>
                             @endforeach
                         </div>
+
+                        @if (method_exists($issues, 'links'))
+                            <div class="d-flex justify-content-center">
+                                {{ $issues->links('pagination::bootstrap-5') }}
+                            </div>
+                        @endif
                     @else
                         <div class="card-body text-muted">No hay incidencias para mostrar.</div>
                     @endif

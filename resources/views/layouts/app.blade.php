@@ -14,24 +14,36 @@
                 <i class="bi bi-map-fill p-2"></i>
                 <a href="{{ url('/') }}" class="fs-5 fw-bold text-decoration-none text-dark">INCIDENCIAS</a>
             </div>
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center">
                 @auth
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-circle me-2 fs-5"></i>
-                        <span class="fw-semibold">{{ auth()->user()->name }}</span>
-                    </div>
-                    <form action="{{ route('logout') }}" method="POST" class="m-0">
-                        @csrf
-                        <button type="submit" class="btn btn-light fw-bold px-3">
-                            SALIR
+                    <div class="dropdown">
+                        <button
+                            class="btn pe-3 border-0 bg-transparent d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
+                            type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-circle me-2 fs-5"></i>
+                                <span class="fw-semibold">{{ auth()->user()->name }}</span>
+                            </div>
                         </button>
-                    </form>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenuDropdown">
+
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item fw-bold d-flex align-items-center py-2">
+                                        <i class="bi bi-box-arrow-right me-2"></i> SALIR
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 @endauth
             </div>
         </div>
     </nav>
 
-    <main class="container py-4">
+    <main class="py-5 px-0">
         @yield('content')
     </main>
 </body>

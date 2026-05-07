@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Contracts\IssueApiInterface;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class IssueController extends Controller
 {
@@ -29,7 +31,36 @@ class IssueController extends Controller
                 return redirect()->route('issues.index')->with('error', 'Tu tienda no tiene aún incidencias tramitadas.');
             }
 
-            $issues = $this->issueService->getAllIssues($userStoreCode);
+            $allIssues = $this->issueService->getAllIssues($userStoreCode);
+
+            usort($allIssues, function ($a, $b) {
+                $dateA = $a->createdAt ? strtotime($a->createdAt) : 0;
+                $dateB = $b->createdAt ? strtotime($b->createdAt) : 0;
+
+                if ($dateA === $dateB) {
+                    return $b->id <=> $a->id;
+                }
+
+                return $dateB <=> $dateA;
+            });
+
+            $isMobile = $this->isMobileDevice($request);
+            $perPage = $isMobile ? 5 : 10;
+            $currentPage = Paginator::resolveCurrentPage();
+            $total = count($allIssues);
+            $offset = ($currentPage - 1) * $perPage;
+            $pageItems = array_slice($allIssues, $offset, $perPage);
+
+            $issues = new LengthAwarePaginator(
+                $pageItems,
+                $total,
+                $perPage,
+                $currentPage,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                ]
+            );
 
             return view('issues.index', compact('issue', 'issues', 'showAll'));
         }
@@ -38,7 +69,7 @@ class IssueController extends Controller
             $issue = $this->issueService->find((int) $searchId);
 
             if (! $issue) {
-                return redirect()->route('issues.index', ['search_id' => $searchId])->with('error', 'Incidencia no encontrada.');
+                return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
             }
         }
 
@@ -107,5 +138,27 @@ class IssueController extends Controller
             : 'Comentario añadido a la incidencia #'.$id.'.';
 
         return redirect()->route('issues.show', $id)->with('success', $message);
+    }
+
+    private function isMobileDevice(Request $request): bool
+    {
+        $userAgent = $request->userAgent() ?? '';
+        $mobilePatterns = [
+            '/mobile/i',
+            '/android/i',
+            '/iphone/i',
+            '/ipad/i',
+            '/ipod/i',
+            '/windows phone/i',
+            '/blackberry/i',
+        ];
+
+        foreach ($mobilePatterns as $pattern) {
+            if (preg_match($pattern, $userAgent)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
