@@ -3,47 +3,11 @@
 @section('title', 'Incidencia #' . $issue->id)
 
 @section('content')
-    @php
-        $userRole = auth()->user()?->role?->name;
-
-        $maskSurname = function (?string $surname): string {
-            $value = trim((string) $surname);
-            if ($value === '') {
-                return 'No disponible';
-            }
-
-            $parts = preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY);
-            if (!$parts) {
-                return 'No disponible';
-            }
-
-            $maskedParts = array_map(function (string $part): string {
-                $visible = \Illuminate\Support\Str::substr($part, 0, 2);
-                $length = \Illuminate\Support\Str::length($part);
-
-                if ($length <= 2) {
-                    return $part;
-                }
-
-                return $visible . str_repeat('*', max($length - 2, 2));
-            }, $parts);
-
-            return implode(' ', $maskedParts);
-        };
-    @endphp
-
-
     @if (session('error'))
         <div class="login-error-banner mb-4">{{ session('error') }}</div>
     @endif
 
-    @if (session('success'))
-        <div class="alert border-0 fw-bold mb-4 p-3" style="background: #d1fae5; color: #065f46; border-radius: 0;">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <section class="detail-card mx-auto border-0 shadow-none">
+    <section class="detail-card issue-detail-card mx-auto border-0 shadow-none">
         <article>
             <header class="detail-block border-top-0">
                 <h1 class="fw-bold mb-0">INC.{{ $issue->id }}</h1>
@@ -55,9 +19,11 @@
                         {{ $issue->createdAt ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::before($issue->createdAt, 'T'), ' ') : 'No disponible' }}
                     </p>
                 </div>
-                <div class="p-3">
+                <div class="p-3 pb-0">
                     <p class="detail-label mb-1">CLIENTE</p>
                     <p class="fw-bold mb-0">{{ $issue->name . ' ' . $issue->surname }}</p>
+                    <p class="mt-1">{{ $issue->email }}</p>
+
                 </div>
             </section>
 
@@ -87,7 +53,7 @@
                     {{ $issue->resolution ?: $issue->description }}</p>
             </section>
 
-            <section class="detail-block py-5 text-center">
+            <section class="detail-block py-3 py-md-5 text-center">
                 @if ($issue->status === 'Closed')
                     <div class="status-closed status mb-3 py-2">ESTA INCIDENCIA ESTA
                         CERRADA
@@ -104,18 +70,37 @@
                         </div>
                     </div>
                 @else
-                    <form action="{{ route('issues.update', $issue->id) }}" method="POST">
+                    <form action="{{ route('issues.update', $issue->id) }}" method="POST" x-data="{ showCloseConfirm: false }">
                         @csrf
                         @method('PATCH')
 
 
                         <div class="detail-row border-0 mb-4">
-                            <button type="submit" name="action" value="close" class="btn-custom">
-                                RESOLVER
+                            <button type="button" class="btn-custom" @click="showCloseConfirm = true">
+                                CERRAR INCIDENCIA
                             </button>
-                            <button type="submit" name="action" value="comment" class="btn-light">
-                                NO RESOLVER
+                            <button type="button" class="btn-light" onclick="window.history.back()">
+                                SALIR SIN MODIFICAR
                             </button>
+                        </div>
+
+                        <div x-show="showCloseConfirm" x-cloak class="confirm-modal" @click.self="showCloseConfirm = false"
+                            @keydown.escape.window="showCloseConfirm = false">
+                            <div class="confirm-dialog text-start">
+
+                                <p class="text-center mb-3 fw-bolder fs-5">¿Seguro de cerrar incidencia?</p>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" name="action" value="close" class="btn-custom w-100">
+                                        SÍ, CERRAR INCIDENCIA
+                                    </button>
+                                    <button type="button" class="btn-light w-100" @click="showCloseConfirm = false">
+                                        CANCELAR
+                                    </button>
+                                </div>
+                                <p class=" small text-muted mb-0 mt-2">Esta acción no se puede deshacer.</p>
+                                <p class="small text-muted my-0">No se podrán añadir más comentarios.</p>
+                            </div>
                         </div>
 
                         <p class="detail-label mb-2 text-start ms-1">COMENTARIOS</p>
@@ -129,7 +114,7 @@
             </section>
         </article>
 
-        <div class="text-center py-5">
+        <div class="text-center py-3 py-md-5">
             <a href="{{ route('issues.index') }}" class="text-decoration-none text-reset letter-spacing fw-bolder">&larr;
                 VOLVER ATRÁS</a>
         </div>

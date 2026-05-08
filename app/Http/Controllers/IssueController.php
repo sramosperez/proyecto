@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\IssueApiInterface;
+use App\Exceptions\ServiceUnavailableException;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 
 class IssueController extends Controller
 {
@@ -17,72 +18,118 @@ class IssueController extends Controller
     {
         $issue = null;
         $issues = [];
-        $showAll = $request->boolean('show_all');
+        $showAll = false;
+        $updatedByLabels = [];
         $searchId = $request->query('search_id');
         $userRole = $request->user()?->role?->name;
-        $userStoreCode = $request->user()?->store_code;
-
-        if ($showAll) {
-            if ($userRole !== 'Dirección') {
-                return redirect()->route('issues.index')->with('error', 'No tienes permisos para ver el listado completo.');
-            }
-
-            if (! $userStoreCode) {
-                return redirect()->route('issues.index')->with('error', 'Tu tienda no tiene aún incidencias tramitadas.');
-            }
-
-            $allIssues = $this->issueService->getAllIssues($userStoreCode);
-
-            usort($allIssues, function ($a, $b) {
-                $dateA = $a->createdAt ? strtotime($a->createdAt) : 0;
-                $dateB = $b->createdAt ? strtotime($b->createdAt) : 0;
-
-                if ($dateA === $dateB) {
-                    return $b->id <=> $a->id;
-                }
-
-                return $dateB <=> $dateA;
-            });
-
-            $isMobile = $this->isMobileDevice($request);
-            $perPage = $isMobile ? 5 : 10;
-            $currentPage = Paginator::resolveCurrentPage();
-            $total = count($allIssues);
-            $offset = ($currentPage - 1) * $perPage;
-            $pageItems = array_slice($allIssues, $offset, $perPage);
-
-            $issues = new LengthAwarePaginator(
-                $pageItems,
-                $total,
-                $perPage,
-                $currentPage,
-                [
-                    'path' => $request->url(),
-                    'query' => $request->query(),
-                ]
-            );
-
-            return view('issues.index', compact('issue', 'issues', 'showAll'));
-        }
 
         if ($searchId) {
-            $issue = $this->issueService->find((int) $searchId);
+            try {
+                $issue = $this->issueService->find((int) $searchId);
+            } catch (ServiceUnavailableException) {
+                return redirect()->route('issues.index')->with('error', $this->systemDownMessage());
+            }
 
             if (! $issue) {
                 return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
             }
+
+            $issue = $this->maskIssueForRole($issue, $userRole);
         }
 
-        return view('issues.index', compact('issue', 'issues', 'showAll'));
+        return view('issues.index', compact('issue', 'issues', 'showAll', 'updatedByLabels'));
+    }
+
+    public function listStoreIssues(Request $request)
+    {
+        $issue = null;
+        $issues = [];
+        $showAll = true;
+        $userRole = $request->user()?->role?->name;
+        $userStoreCode = $request->user()?->store_code;
+
+        if (! $userStoreCode) {
+            return redirect()->route('issues.index')->with('error', 'Tu tienda no tiene aún incidencias tramitadas.');
+        }
+
+        try {
+            $allIssues = $this->issueService->getAllIssues($userStoreCode);
+        } catch (ServiceUnavailableException) {
+            return redirect()->route('issues.index')->with('error', $this->systemDownMessage());
+        }
+
+        $allIssues = $this->maskIssuesForRole($allIssues, $userRole);
+        $updatedByLabels = $this->buildUpdatedByLabels($allIssues);
+
+        $allIssues = collect($allIssues)
+            ->sortByDesc(function ($issue) {
+                return $issue->createdAt ?: '';
+            })
+            ->values();
+
+        $perPage = 5;
+        $currentPage = max(1, (int) $request->query('page', 1));
+        $total = $allIssues->count();
+        $pageItems = $allIssues->forPage($currentPage, $perPage)->values();
+
+        $issues = new LengthAwarePaginator(
+            $pageItems,
+            $total,
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        return view('issues.index', compact('issue', 'issues', 'showAll', 'updatedByLabels'));
+    }
+
+    private function buildUpdatedByLabels(array $issues): array
+    {
+        $labels = [];
+        $nameCache = [];
+
+        foreach ($issues as $issue) {
+            $employeeId = $issue->updatedBy ?? null;
+            if ($employeeId === null) {
+                $labels[$issue->id] = '—';
+
+                continue;
+            }
+
+            if (! array_key_exists($employeeId, $nameCache)) {
+                $nameCache[$employeeId] = User::query()
+                    ->where('employee_id', $employeeId)
+                    ->value('name');
+            }
+
+            $employeeName = trim((string) ($nameCache[$employeeId] ?? ''));
+
+            $labels[$issue->id] = $employeeName !== ''
+                ? $employeeName.' - '.$employeeId
+                : (string) $employeeId;
+        }
+
+        return $labels;
     }
 
     public function show(Request $request, $id)
     {
-        $issue = $this->issueService->find((int) $id);
+        try {
+            $issue = $this->issueService->find((int) $id);
+        } catch (ServiceUnavailableException) {
+            return redirect()->route('issues.index')->with('error', $this->systemDownMessage());
+        }
+
+        $userRole = $request->user()?->role?->name;
 
         if (! $issue) {
             return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
         }
+
+        $issue = $this->maskIssueForRole($issue, $userRole);
 
         return view('issues.show', compact('issue'));
     }
@@ -94,13 +141,16 @@ class IssueController extends Controller
             'action' => 'required|in:comment,close',
         ]);
 
-        $issue = $this->issueService->find((int) $id);
+        try {
+            $issue = $this->issueService->find((int) $id);
+        } catch (ServiceUnavailableException) {
+            return redirect()->route('issues.index')->with('error', $this->systemDownMessage());
+        }
 
         if (! $issue) {
             return redirect()->route('issues.index')->with('error', 'Incidencia no encontrada.');
         }
 
-        // Validar que la incidencia pertenece a la tienda del usuario
         $userStoreCode = $request->user()?->store_code;
         if ($userStoreCode && $issue->storeCode && $issue->storeCode !== $userStoreCode) {
             return redirect()->route('issues.index')->with('error', 'No tienes acceso a esta incidencia.');
@@ -121,11 +171,17 @@ class IssueController extends Controller
         ];
 
         $comment = $request->input('comment');
-        if ($comment !== null && $comment !== '') {
+        if ($request->input('action') === 'comment') {
+            $payload['comment'] = $comment ?? '';
+        } elseif ($comment !== null && $comment !== '') {
             $payload['comment'] = $comment;
         }
 
-        $updated = $this->issueService->updateIssue((int) $id, $payload, $employeeId);
+        try {
+            $updated = $this->issueService->updateIssue((int) $id, $payload, $employeeId);
+        } catch (ServiceUnavailableException) {
+            return redirect()->route('issues.index')->with('error', $this->systemDownMessage());
+        }
 
         if (! $updated) {
             return redirect()
@@ -133,32 +189,79 @@ class IssueController extends Controller
                 ->with('error', 'No se pudo actualizar la incidencia #'.$id.'.');
         }
 
-        $message = $newStatus === 'Closed'
-            ? 'Incidencia #'.$id.' cerrada correctamente.'
-            : 'Comentario añadido a la incidencia #'.$id.'.';
-
-        return redirect()->route('issues.show', $id)->with('success', $message);
+        return redirect()->route('issues.show', $id);
     }
 
-    private function isMobileDevice(Request $request): bool
+    private function systemDownMessage(): string
     {
-        $userAgent = $request->userAgent() ?? '';
-        $mobilePatterns = [
-            '/mobile/i',
-            '/android/i',
-            '/iphone/i',
-            '/ipad/i',
-            '/ipod/i',
-            '/windows phone/i',
-            '/blackberry/i',
-        ];
+        return 'Sistema de incidencias caido temporalmente. Intentalo de nuevo mas tarde.';
+    }
 
-        foreach ($mobilePatterns as $pattern) {
-            if (preg_match($pattern, $userAgent)) {
-                return true;
-            }
+    private function maskIssueForRole(object $issue, ?string $role): object
+    {
+        if ($role === 'Dirección') {
+            return $issue;
         }
 
-        return false;
+        $maskedIssue = clone $issue;
+        $maskedIssue->email = $this->maskEmail($issue->email ?? null);
+
+        if ($role === 'Empleado') {
+            $maskedIssue->surname = $this->maskSurname($issue->surname ?? null);
+        }
+
+        return $maskedIssue;
+    }
+
+    private function maskIssuesForRole(array $issues, ?string $role): array
+    {
+        $masked = [];
+
+        foreach ($issues as $issue) {
+            $masked[] = $this->maskIssueForRole($issue, $role);
+        }
+
+        return $masked;
+    }
+
+    private function maskSurname(?string $surname): string
+    {
+        $value = trim((string) $surname);
+        if ($value === '') {
+            return '—';
+        }
+
+        $parts = preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY);
+        if (! $parts) {
+            return '—';
+        }
+
+        $maskedParts = [];
+
+        foreach ($parts as $part) {
+            $visible = \Illuminate\Support\Str::substr($part, 0, 2);
+            $length = \Illuminate\Support\Str::length($part);
+
+            if ($length <= 2) {
+                $maskedParts[] = $part;
+
+                continue;
+            }
+
+            $maskedParts[] = $visible.str_repeat('*', max($length - 2, 2));
+        }
+
+        return implode(' ', $maskedParts);
+    }
+
+    private function maskEmail(?string $email): string
+    {
+        if (! $email || ! str_contains($email, '@')) {
+            return 'No disponible';
+        }
+
+        [$name, $domain] = explode('@', $email);
+
+        return substr($name, 0, 2).'****@'.$domain;
     }
 }

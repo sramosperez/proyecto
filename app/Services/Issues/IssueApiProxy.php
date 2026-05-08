@@ -4,6 +4,7 @@ namespace App\Services\Issues;
 
 use App\Contracts\IssueApiInterface;
 use App\DTOs\IssueDTO;
+use App\Exceptions\ServiceUnavailableException;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Database;
 use Throwable;
@@ -53,8 +54,7 @@ class IssueApiProxy implements IssueApiInterface
             return null;
         } catch (Throwable $e) {
             Log::warning("Error en Firebase para issue {$id}: ".$e->getMessage());
-
-            return null;
+            throw new ServiceUnavailableException('Sistema de incidencias no disponible.', 0, $e);
         }
     }
 
@@ -108,8 +108,7 @@ class IssueApiProxy implements IssueApiInterface
                 'store_code' => $storeCode,
                 'error' => $e->getMessage(),
             ]);
-
-            return [];
+            throw new ServiceUnavailableException('Sistema de incidencias no disponible.', 0, $e);
         }
     }
 
@@ -125,12 +124,9 @@ class IssueApiProxy implements IssueApiInterface
             $current = $result['data'];
             $currentStoreCode = $current['storeCode'] ?? null;
             $requestedStatus = $data['status'] ?? ($current['status'] ?? 'Open');
-            $isCurrentStatusBoolean = is_bool($current['status'] ?? null);
-
-            $statusToPersist = $requestedStatus;
-            if (is_bool($current['status'] ?? null)) {
-                $data['status'] = $data['status'] === 'Closed' ? false : true;
-            }
+            $statusToPersist = is_bool($current['status'] ?? null)
+                ? ($requestedStatus === 'Closed' ? false : true)
+                : $requestedStatus;
 
             $payload = [
                 'status' => $statusToPersist,
@@ -138,8 +134,8 @@ class IssueApiProxy implements IssueApiInterface
                 'updatedBy' => $userId,
             ];
 
-            if (array_key_exists('comment', $data) && $data['comment'] !== null && $data['comment'] !== '') {
-                $payload['comment'] = $data['comment'];
+            if (array_key_exists('comment', $data)) {
+                $payload['comment'] = $data['comment'] ?? '';
             }
 
             $path = $result['path'] === '/' ? '/'.$result['key'] : $result['path'].'/'.$result['key'];
@@ -152,8 +148,7 @@ class IssueApiProxy implements IssueApiInterface
                 'user_id' => $userId,
                 'error' => $e->getMessage(),
             ]);
-
-            return false;
+            throw new ServiceUnavailableException('Sistema de incidencias no disponible.', 0, $e);
         }
     }
 }

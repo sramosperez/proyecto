@@ -6,30 +6,6 @@
     @php
         $userRole = auth()->user()?->role?->name;
         $isDirector = $userRole === 'Dirección';
-        $maskSurname = function (?string $surname): string {
-            $value = trim((string) $surname);
-            if ($value === '') {
-                return '—';
-            }
-
-            $parts = preg_split('/\s+/u', $value, -1, PREG_SPLIT_NO_EMPTY);
-            if (!$parts) {
-                return '—';
-            }
-
-            $maskedParts = array_map(function (string $part): string {
-                $visible = \Illuminate\Support\Str::substr($part, 0, 2);
-                $length = \Illuminate\Support\Str::length($part);
-
-                if ($length <= 2) {
-                    return $part;
-                }
-
-                return $visible . str_repeat('*', max($length - 2, 2));
-            }, $parts);
-
-            return implode(' ', $maskedParts);
-        };
     @endphp
     <div x-data="{ loading: false }">
 
@@ -37,7 +13,7 @@
             <div class="search-card p-4">
                 <div class="mb-4">
                     <h1 class="h4 fw-bold mb-0">BUSCADOR</h1>
-                    <p class="mt-3">INTRODUCE EL CÓDIGO DE LA INCIDENCIA</p>
+                    <p class="mt-3 fw-bold">INTRODUCE EL CÓDIGO DE LA INCIDENCIA</p>
                 </div>
 
                 <form action="{{ route('issues.index') }}" method="GET" class="form-search mb-4" @submit="loading = true">
@@ -55,7 +31,7 @@
 
                 @if ($isDirector)
                     <div class="my-5">
-                        <a href="{{ route('issues.index', ['show_all' => 1]) }}"
+                        <a href="{{ route('issues.all') }}"
                             class="btn btn-light fw-bold d-inline-flex align-items-center justify-content-center">
                             VER INCIDENCIAS DE LA TIENDA {{ auth()->user()?->store_code ?? '—' }}
                         </a>
@@ -96,11 +72,7 @@
                                 <dt class="col-5  issue-label">Cliente
                                 </dt>
                                 <dd class="col-7 fw-semibold mb-2">
-                                    @if ($userRole === 'Empleado')
-                                        {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ? $maskSurname($issue->surname) : '')) ?: '—' }}
-                                    @else
-                                        {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ?? '')) ?: '—' }}
-                                    @endif
+                                    {{ trim(($issue->name ?? '') . ' ' . ($issue->surname ?? '')) ?: '—' }}
                                 </dd>
                                 <dt class="col-5 issue-label">Fecha</dt>
                                 <dd class="col-7 fw-semibold mb-0">
@@ -141,7 +113,10 @@
                                         <p class="mb-2 issue-label fw-bold">
                                             {{ $item->name ? $item->name . ' ' . $item->surname : 'Sin nombre' }}
                                         </p>
-                                        <p class="badge-light fw-bolder mb-0">EMPLEADO {{ $item->updatedBy ?: '—' }}</p>
+                                        <p class="badge-light fw-bolder mb-0 d-inline-flex align-items-center gap-2">
+                                            <i class="bi bi-person-fill" aria-hidden="true"></i>
+                                            <span>{{ $updatedByLabels[$item->id] ?? ($item->updatedBy ?: '—') }}</span>
+                                        </p>
                                     </div>
 
                                     <div

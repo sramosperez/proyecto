@@ -14,7 +14,7 @@ class IssueDTO
         public ?string $comment,
         public ?string $name,
         public ?string $surname,
-        public ?string $customerEmail,
+        public ?string $email,
         public string $status,
         public ?string $storeCode,
         public ?int $updatedBy,
@@ -49,15 +49,10 @@ class IssueDTO
             comment: $data['comment'] ?? null,
             name: $data['name'] ?? null,
             surname: $data['surname'] ?? null,
-            customerEmail: $data['customerEmail'] ?? null,
+            email: $data['email'] ?? null,
             status: $status,
             storeCode: $storeCode,
             updatedBy: $updatedBy,
         );
-    }
-
-    public function isOpen(): bool
-    {
-        return $this->status !== 'Closed' && $this->status !== 'Resolved';
     }
 }

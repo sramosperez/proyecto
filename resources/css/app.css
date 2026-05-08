@@ -20,6 +20,37 @@
 
  }
 
+ body {
+     display: flex;
+     flex-direction: column;
+     min-height: 100svh;
+ }
+
+ body>main {
+     flex: 1;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     padding: 1.25rem 0;
+ }
+
+ @media (max-width: 767.98px) {
+     .container-login {
+         min-height: auto;
+         padding-top: 1rem !important;
+         padding-bottom: 1rem !important;
+         margin-top: 0 !important;
+         margin-bottom: 0 !important;
+     }
+
+     .login-card,
+     .search-card {
+         background: transparent !important;
+         box-shadow: none !important;
+         border: 0 !important;
+     }
+ }
+
  .letter-spacing {
      letter-spacing: 0.14em;
  }
@@ -165,14 +196,40 @@
 
 
  .detail-block {
-     padding: 0.5rem 1rem;
+     padding: 0.4rem 0.75rem;
      border-top: 1px solid var(--color-accent-dark);
+ }
+
+ @media (min-width: 576px) {
+     .detail-block {
+         padding: 0.5rem 1rem;
+     }
  }
 
  .detail-row {
      display: grid;
      grid-template-columns: 1fr 1fr;
      border-top: 1px solid var(--color-accent-dark);
+ }
+
+ .issue-detail-card {
+     display: flex;
+     flex-direction: column;
+     min-height: calc(100svh - 84px - 2.5rem);
+ }
+
+ .issue-detail-card>article {
+     flex: 1;
+ }
+
+ .issue-detail-card>.text-center {
+     margin-top: auto;
+ }
+
+ .detail-row>* {
+     min-width: 0;
+     overflow-wrap: break-word;
+     word-break: break-word;
  }
 
 
@@ -194,6 +251,26 @@
      min-height: 96px;
      font-size: 0.95rem;
      color: var(--color-text);
+ }
+
+ .confirm-modal {
+     position: fixed;
+     inset: 0;
+     background: rgba(0, 0, 0, 0.55);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     z-index: 1060;
+     padding: 1rem;
+ }
+
+ .confirm-dialog {
+     width: 100%;
+     max-width: 440px;
+     background: #fff;
+     border: 1px solid rgba(0, 0, 0, 0.12);
+     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.08);
+     padding: 1.25rem;
  }
 
 
@@ -236,7 +313,7 @@
  }
 
  .form-login.was-validated .form-control:valid {
-     border-color: inherit;
+     box-shadow: none;
      background-image: none;
  }
 
@@ -280,6 +357,11 @@
      transform: scale(1.05);
  }
 
+ .pagination .page-link:focus {
+     box-shadow: none !important;
+     outline: none !important;
+ }
+
  .pagination .page-item.active .page-link {
      background: #000;
      border-color: #000;
@@ -294,6 +376,12 @@
      cursor: not-allowed;
  }
 
+ /* Dropdown logout*/
+ .dropdown-item:focus,
+ .dropdown-item:active {
+     background-color: transparent;
+
+ }
 
  /*mediaqueries*/
 

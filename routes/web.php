@@ -18,6 +18,9 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('issues')->group(function () {
         Route::get('/', [IssueController::class, 'index'])->name('issues.index');
+        Route::get('/all', [IssueController::class, 'listStoreIssues'])
+            ->middleware('role:Dirección')
+            ->name('issues.all');
         Route::get('/{id}', [IssueController::class, 'show'])
             ->middleware('role:Responsable,Dirección')
             ->name('issues.show');
