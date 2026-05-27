@@ -130,8 +130,9 @@ class IssueController extends Controller
         }
 
         $issue = $this->maskIssueForRole($issue, $userRole);
+        $returnTo = $this->safeReturnTo($request->query('return_to'));
 
-        return view('issues.show', compact('issue'));
+        return view('issues.show', compact('issue', 'returnTo'));
     }
 
     public function update(Request $request, $id)
@@ -139,7 +140,10 @@ class IssueController extends Controller
         $request->validate([
             'comment' => 'nullable|string|max:500',
             'action' => 'required|in:comment,close',
+            'return_to' => 'nullable|string',
         ]);
+
+        $returnTo = $this->safeReturnTo($request->input('return_to'));
 
         try {
             $issue = $this->issueService->find((int) $id);
@@ -157,9 +161,11 @@ class IssueController extends Controller
         }
 
         if ($issue->status === 'Closed') {
-            return redirect()
-                ->route('issues.index', ['search_id' => $id])
-                ->with('error', 'La incidencia #'.$id.' ya esta cerrada y solo puede visualizarse.');
+            $redirect = $returnTo
+                ? redirect()->to($returnTo)
+                : redirect()->route('issues.index', ['search_id' => $id]);
+
+            return $redirect->with('error', 'La incidencia #'.$id.' ya esta cerrada y solo puede visualizarse.');
         }
 
         $employeeId = (int) $request->user()->employee_id;
@@ -185,11 +191,28 @@ class IssueController extends Controller
 
         if (! $updated) {
             return redirect()
-                ->route('issues.show', $id)
+                ->route('issues.show', ['id' => $id, 'return_to' => $returnTo])
                 ->with('error', 'No se pudo actualizar la incidencia #'.$id.'.');
         }
 
-        return redirect()->route('issues.show', $id);
+        return redirect()->route('issues.show', ['id' => $id, 'return_to' => $returnTo]);
+    }
+
+    private function safeReturnTo(?string $returnTo): ?string
+    {
+        if (! $returnTo) {
+            return null;
+        }
+
+        $decoded = urldecode($returnTo);
+        $parsed = parse_url($decoded);
+
+        $path = $parsed['path'] ?? '';
+        if (! str_starts_with($path, '/issues')) {
+            return null;
+        }
+
+        return $decoded;
     }
 
     private function systemDownMessage(): string

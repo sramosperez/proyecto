@@ -83,7 +83,7 @@
                             </dl>
 
                             @if ($userRole !== 'Empleado')
-                                <a href="{{ route('issues.show', $issue->id) }}"
+                                <a href="{{ route('issues.show', ['id' => $issue->id, 'return_to' => request()->fullUrl()]) }}"
                                     class="btn btn-custom w-100 fw-bold d-flex align-items-center justify-content-center mt-4">
                                     VER INCIDENCIA COMPLETA
                                 </a>
@@ -105,7 +105,7 @@
                     @if (count($issues) > 0)
                         <div class="d-flex flex-column">
                             @foreach ($issues as $item)
-                                <a href="{{ route('issues.show', $item->id) }}"
+                                <a href="{{ route('issues.show', ['id' => $item->id, 'return_to' => request()->fullUrl()]) }}"
                                     class="text-reset list-item text-decoration-none p-4 d-flex align-items-center justify-content-between gap-3">
                                     <div>
                                         <p class="fw-bold mb-2">Nº {{ $item->id ?: '—' }}</p>

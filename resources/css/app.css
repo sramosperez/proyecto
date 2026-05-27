@@ -212,7 +212,7 @@
 
 
  .detail-label {
-    font-size: clamp(0.72rem, 0.68rem + 0.2vw, 0.82rem);
+     font-size: clamp(0.72rem, 0.68rem + 0.2vw, 0.82rem);
      font-weight: 700;
      letter-spacing: 0.18em;
      color: var(--color-accent-dark);
@@ -391,5 +391,11 @@
          background:
              linear-gradient(rgba(201, 204, 206, 0.38), rgba(201, 204, 206, 0.38)),
              url('/public/images/fondo.jpg') center / cover no-repeat fixed;
+     }
+ }
+
+ @media (min-width: 992px) {
+     .detail-label {
+         font-size: 0.82rem;
      }
  }

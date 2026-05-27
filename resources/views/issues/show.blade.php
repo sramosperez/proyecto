@@ -73,15 +73,17 @@
                     <form action="{{ route('issues.update', $issue->id) }}" method="POST" x-data="{ showCloseConfirm: false }">
                         @csrf
                         @method('PATCH')
+                        <input type="hidden" name="return_to" value="{{ $returnTo ?? '' }}">
 
 
                         <div class="detail-row border-0 mb-4">
                             <button type="button" class="btn-custom" @click="showCloseConfirm = true">
                                 CERRAR INCIDENCIA
                             </button>
-                            <button type="button" class="btn-light" onclick="window.history.back()">
+                            <a href="{{ $returnTo ?? route('issues.index') }}"
+                                class="btn btn-light d-inline-flex align-items-center justify-content-center">
                                 SALIR SIN MODIFICAR
-                            </button>
+                            </a>
                         </div>
 
                         <div x-show="showCloseConfirm" x-cloak class="confirm-modal" @click.self="showCloseConfirm = false"
@@ -117,7 +119,8 @@
         </article>
 
         <div class="text-center py-3 py-md-5">
-            <a href="{{ route('issues.index') }}" class="text-decoration-none text-reset letter-spacing fw-bolder">&larr;
+            <a href="{{ $returnTo ?? route('issues.index') }}"
+                class="text-decoration-none text-reset letter-spacing fw-bolder">&larr;
                 VOLVER ATRÁS</a>
         </div>
     </section>
