@@ -27,7 +27,6 @@ class IssueApiProxy implements IssueApiInterface
                 $issues = $this->database
                     ->getReference($basePath)
                     ->getValue();
-
                 if (! is_array($issues) || empty($issues)) {
                     continue;
                 }
@@ -38,7 +37,6 @@ class IssueApiProxy implements IssueApiInterface
                     }
 
                     $issueId = isset($issueData['id']) ? (int) $issueData['id'] : (int) $firebaseKey;
-
                     if ($issueId !== $id) {
                         continue;
                     }

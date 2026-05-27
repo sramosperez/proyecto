@@ -1,59 +1,56 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Retail Support - Sistema Interno de Incidencias
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicacion web interna desarrollada con Laravel para la gestion de incidencias en tienda.
 
-## About Laravel
+El proyecto esta orientado a un caso real de operativa diaria: consulta de incidencias por codigo, actualizacion por perfiles con permisos y conexion desacoplada con sistema externo de incidencias mediante un Proxy.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack Tecnologico
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Backend: Laravel 12, PHP 8.2+
+- Frontend: Blade, Bootstrap 5, Alpine.js, Vite
+- Base de datos local: MariaDB (Sail)
+- Sistema externo de incidencias: Firebase Realtime Database (Kreait)
+- Contenedores: Docker / Laravel Sail
+- Despliegue: Docker multi-stage (compatible con Dokploy)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Funcionalidades Principales
 
-## Learning Laravel
+- Login por `employee_id` y contrasena
+- Gestion de roles: Empleado, Responsable y Direccion
+- Busqueda de incidencias por ID
+- Vista de detalle y actualizacion de incidencia (segun rol)
+- Listado de incidencias de tienda para Direccion
+- Control de acceso con middleware de autenticacion y rol
+- Vistas de error personalizadas: 403, 404, 419, 500
+- Manejo de fallos del sistema externo con excepcion personalizada
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Arquitectura (Resumen)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Contrato: `IssueApiInterface`
+- Implementacion: `IssueApiProxy`
+- Normalizacion de datos externos: `IssueDTO`
+- Objetivo: desacoplar la logica de negocio de la tecnologia concreta del proveedor externo
 
-## Laravel Sponsors
+## Despliegue
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+El repositorio incluye un `Dockerfile` multi-stage orientado a produccion:
 
-### Premium Partners
+- Stage 1: build de assets (Node + Vite)
+- Stage 2: dependencias PHP (Composer, sin dev)
+- Stage 3: runtime final (PHP 8.4 + Apache)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Tambien elimina `public/hot`, copia solo artefactos necesarios (`vendor`, `public/build`) y prepara permisos de `storage` y `bootstrap/cache`.
 
-## Contributing
+## Estado del Proyecto
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Proyecto academico con enfoque practico de entorno real.
 
-## Code of Conduct
+Posibles mejoras futuras:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Integracion con SSO corporativo real
+- Filtros avanzados en listado de incidencias (fecha, empleado, estado)
+- Flujo de identificacion mediante QR para cliente/incidencia
 
-## Security Vulnerabilities
+## Licencia
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Este proyecto se distribuye bajo licencia MIT.

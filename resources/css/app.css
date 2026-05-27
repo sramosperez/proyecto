@@ -10,8 +10,8 @@
      --color-error: #dc001b;
      --color-light: #f3f3f3e1;
 
-     --color-pending: #e25f07;
-     --color-closed: #348d19;
+     --color-pending: #a64400;
+     --color-closed: #1f6b10;
  }
 
  * {
@@ -32,23 +32,6 @@
      flex-direction: column;
      justify-content: center;
      padding: 1.25rem 0;
- }
-
- @media (max-width: 767.98px) {
-     .container-login {
-         min-height: auto;
-         padding-top: 1rem !important;
-         padding-bottom: 1rem !important;
-         margin-top: 0 !important;
-         margin-bottom: 0 !important;
-     }
-
-     .login-card,
-     .search-card {
-         background: transparent !important;
-         box-shadow: none !important;
-         border: 0 !important;
-     }
  }
 
  .letter-spacing {
@@ -200,11 +183,7 @@
      border-top: 1px solid var(--color-accent-dark);
  }
 
- @media (min-width: 576px) {
-     .detail-block {
-         padding: 0.5rem 1rem;
-     }
- }
+
 
  .detail-row {
      display: grid;
@@ -215,7 +194,6 @@
  .issue-detail-card {
      display: flex;
      flex-direction: column;
-     min-height: calc(100svh - 84px - 2.5rem);
  }
 
  .issue-detail-card>article {
@@ -234,12 +212,11 @@
 
 
  .detail-label {
-     font-size: 0.58rem;
+    font-size: clamp(0.72rem, 0.68rem + 0.2vw, 0.82rem);
      font-weight: 700;
      letter-spacing: 0.18em;
      color: var(--color-accent-dark);
  }
-
 
  .detail-textarea {
      width: 100%;
@@ -331,7 +308,7 @@
      padding: 0.95rem 0.75rem;
  }
 
- /* Paginación minimalista */
+ /* Paginación*/
  .pagination {
      gap: 0.4rem;
      flex-wrap: wrap;
@@ -385,6 +362,29 @@
 
  /*mediaqueries*/
 
+ @media (max-width: 991.98px) {
+     .issue-detail-card {
+         min-height: calc(100svh - 84px - 2.5rem);
+     }
+ }
+
+ @media (max-width: 767.98px) {
+     .container-login {
+         min-height: auto;
+         padding-top: 1rem !important;
+         padding-bottom: 1rem !important;
+         margin-top: 0 !important;
+         margin-bottom: 0 !important;
+     }
+
+     .login-card,
+     .search-card {
+         background: transparent !important;
+         box-shadow: none !important;
+         border: 0 !important;
+     }
+ }
+
  @media (min-width: 768px) {
      body {
          min-height: 100vh;
@@ -392,9 +392,4 @@
              linear-gradient(rgba(201, 204, 206, 0.38), rgba(201, 204, 206, 0.38)),
              url('/public/images/fondo.jpg') center / cover no-repeat fixed;
      }
-
-     /*  .issue-detail-wrapper {
-         margin-top: 1rem;
-     } */
-
  }

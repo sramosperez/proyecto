@@ -17,9 +17,11 @@
                 </div>
 
                 <form action="{{ route('issues.index') }}" method="GET" class="form-search mb-4" @submit="loading = true">
+                    <label for="search_id" class="visually-hidden">Codigo de incidencia</label>
                     <div class="d-flex gap-2 align-items-stretch">
-                        <input type="number" name="search_id" class="form-control form-control-lg" placeholder="000000"
-                            value="{{ isset($issue) ? '' : request('search_id') }}" inputmode="numeric" required>
+                        <input id="search_id" type="number" name="search_id" class="form-control form-control-lg"
+                            placeholder="000000" value="{{ isset($issue) ? '' : request('search_id') }}" inputmode="numeric"
+                            required>
                         <button type="submit" class="btn btn-custom px-4 fw-bold" :disabled="loading">
                             <span x-show="!loading">BUSCAR</span>
                             <span x-show="loading" x-cloak>

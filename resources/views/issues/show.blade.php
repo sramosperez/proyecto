@@ -59,8 +59,8 @@
                         CERRADA
                     </div>
                     <div x-data="{ showClosedNotice: false }">
-                        <p class="detail-label mb-2 mt-3 text-start">COMENTARIOS</p>
-                        <textarea rows="4" readonly class="detail-textarea" @focus="showClosedNotice = true"
+                        <label for="closed_comment" class="detail-label mb-2 mt-3 text-start d-block">COMENTARIOS</label>
+                        <textarea id="closed_comment" rows="4" readonly class="detail-textarea" @focus="showClosedNotice = true"
                             @keydown.prevent="showClosedNotice = true" @paste.prevent="showClosedNotice = true">{{ $issue->comment ?? 'Sin comentarios adicionales.' }}</textarea>
 
                         <div x-show="showClosedNotice" x-cloak
@@ -103,10 +103,12 @@
                             </div>
                         </div>
 
-                        <p class="detail-label mb-2 text-start ms-1">COMENTARIOS</p>
-                        <textarea name="comment" rows="4" class="detail-textarea" placeholder="Añadir comentarios adicionales...">{{ old('comment', $issue->comment ?? '') }}</textarea>
+                        <label for="comment" class="detail-label mb-2 text-start ms-1 d-block">COMENTARIOS</label>
+                        <textarea id="comment" name="comment" rows="4" class="detail-textarea"
+                            placeholder="Añadir comentarios adicionales...">{{ old('comment', $issue->comment ?? '') }}</textarea>
 
-                        <button type="submit" name="action" value="comment" class="btn-custom mt-4 w-100">
+                        <button type="submit" name="action" value="comment" class="btn-custom mt-4 w-100"
+                            aria-label="Enviar comentario de la incidencia">
                             ENVIAR
                         </button>
                     </form>
